@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 from dotenv import load_dotenv
 from datetime import datetime
@@ -16,6 +17,11 @@ TOKEN = os.getenv("MOODLE_TOKEN")
 # Through this endpoint (URL) we can make requests to various Moodle functions
 url = f"{MOODLE_URL}/webservice/rest/server.php"
 
+
+def sanitize_filename(filename):
+    # This function is used to sanitize filenames by removing any characters that are not allowed in filenames
+    # The regular expression pattern r'[<>:"/\\|?*]' matches any of the characters < > : " / \ | ? *
+    return re.sub(r'[<>:"/\\|?*]', '_', filename)
 
 # These parameters are required for making a request to Moodle's web service API
 params = {
@@ -118,9 +124,16 @@ def download_assignment_files(assignment, token, course_name):
 # We can access the attachments of the first assignment using the "introattachments" key
     attachments = assignment.get("introattachments", [])
 
+    safe_course_name = sanitize_filename(course_name)
+    safe_assignment_name = sanitize_filename(assignment["name"])
+
     # We create a folder structure to save the downloaded files in a directory named "downloads"
     # The folder structure will be: downloads/course_name/assignment_name
-    assignment_folder = (Path("downloads") / course_name / assignment["name"])
+    # assignment_folder = (Path("downloads") / course_name / assignment["name"])
+
+    # We use safe_course_name and safe_assignment_name to avoid any issues with invalid characters in folder names
+
+    assignment_folder = (Path("downloads") / safe_course_name / safe_assignment_name)
 
     # Create a directory to save the downloaded files if it doesn't exist
     # The mkdir() method creates the directory, and the parents=True argument allows creating parent directories if they don't exist
