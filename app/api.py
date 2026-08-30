@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException
 from dotenv import load_dotenv
 
 from .downloader import download_assignment_files
+from .schemas import SyncResponse, CourseResponse, AssignmentResponse
 
 from .moodle_client import (
     get_site_info,
@@ -30,7 +31,8 @@ def root():
 
 # This endpoint retrieves the list of courses for the authenticated user
 
-@app.get("/courses")
+# the response_model parameter specifies the expected response format for the endpoint. In this case, it expectes a response that matches the CourseResponse schema defined in app/schemas.py. This allows FastAPI to automatically validate and serialize the response data according to the defined schema.
+@app.get("/courses", response_model=list[CourseResponse])
 def get_user_courses():
     site_info = get_site_info(url, TOKEN)
 
@@ -40,7 +42,7 @@ def get_user_courses():
 
     return moodle_courses
 
-@app.get("/courses/{course_id}/assignments")
+@app.get("/courses/{course_id}/assignments", response_model=list[AssignmentResponse])
 def course_assignments(course_id: int):
     site_info = get_site_info(url, TOKEN)
 
@@ -77,7 +79,9 @@ def course_assignments(course_id: int):
 
     return assignments_data["courses"][0]["assignments"]
 
-@app.post("/sync")
+# The response_model parameter specifies the expected response format for the endpoint. In this case, it expects a response that matches the SyncResponse schema defined in app/schemas.py. This allows FastAPI to automatically validate and serialize the response data according to the defined schema.
+
+@app.post("/sync", response_model=SyncResponse)
 def sync_moodle():
     site_info = get_site_info(url, TOKEN)
 
