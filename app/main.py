@@ -2,14 +2,14 @@ import os
 
 from dotenv import load_dotenv
 
-from moodle_client import (
+from .moodle_client import (
     get_site_info,
     get_courses,
     get_assignments
 )
 
 
-from downloader import download_assignment_files
+from .downloader import download_assignment_files
 
 # Load environment variables from .env file
 # So that we can use them in our code without hardcoding sensitive information
