@@ -16,7 +16,7 @@ def sanitize_filename(filename):
 
 def download_assignment_files(assignment, token, course_name):
 
-# We can access the attachments of the first assignment using the "introattachments" key
+    # We can access the attachments of the first assignment using the "introattachments" key
     attachments = assignment.get("introattachments", [])
 
     safe_course_name = sanitize_filename(course_name)
@@ -35,6 +35,10 @@ def download_assignment_files(assignment, token, course_name):
     # The exist_ok=True argument prevents raising an error if the directory already exists
     assignment_folder.mkdir(parents=True, exist_ok=True)
 
+
+    downloaded = 0
+    skipped = 0
+
     for file in attachments:
 
         filename = file["filename"]
@@ -43,9 +47,8 @@ def download_assignment_files(assignment, token, course_name):
         file_path = assignment_folder / filename
 
         if file_path.exists():
-            print(
-                f"Die Datei {filename} existiert bereits. Überspringe den Download."
-            )
+            # If the file already exists, we skip downloading it and print a message indicating that the file is being skipped
+            skipped += 1
             continue
 
         # Download the file using the requests library and the file URL
@@ -60,7 +63,13 @@ def download_assignment_files(assignment, token, course_name):
             with open(file_path, "wb") as f:
                 f.write(download_response.content)
 
-            print("Heruntergeladene Datei: ", file_path)
-        else:
-            print(
-                f"Fehler beim Herunterladen der Datei {filename}. Status Code: {download_response.status_code}")
+            downloaded += 1
+
+    return downloaded, skipped
+        
+        # else:
+        #     print(
+        #         f"Fehler beim Herunterladen der Datei {filename}. Status Code: {download_response.status_code}")
+
+
+
