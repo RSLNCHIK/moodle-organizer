@@ -13,7 +13,13 @@ class SyncResponse(BaseModel):
 
 class CourseResponse(BaseModel):
     id: int
+    moodle_id: int
     fullname: str
+
+    # The model_config dictionary is used to configure the behavior of the Pydantic model. In this case, it specifies that the model should be populated from attributes, allowing for more flexible data handling and validation.
+    model_config = {
+        "from_attributes": True
+    }
 
 
 class AssignmentResponse(BaseModel):
