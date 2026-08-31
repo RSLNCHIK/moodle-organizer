@@ -2,12 +2,12 @@ import os
 from fastapi import FastAPI, HTTPException
 from dotenv import load_dotenv
 
-from .downloader import download_assignment_files
+from .services.downloader import download_assignment_files
 from .schemas import SyncResponse, CourseResponse, AssignmentResponse
-from .database import SessionLocal
-from .repository import save_course, save_assignment, get_all_courses
+from .db.database import SessionLocal
+from .db.repository import save_course, save_assignment, get_all_courses
 
-from .moodle_client import (
+from .clients.moodle_client import (
     get_site_info,
     get_courses,
     get_assignments
