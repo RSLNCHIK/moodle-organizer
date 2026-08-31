@@ -1,3 +1,6 @@
+# CLI-/Skript-Einstiegspunkt
+# This file serves as the entry point for the command-line interface (CLI) or script execution. It is responsible for initializing the application, loading environment variables, and orchestrating the main workflow of the application.
+
 import os
 
 from dotenv import load_dotenv
