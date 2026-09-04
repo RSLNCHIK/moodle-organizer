@@ -54,3 +54,15 @@ class File(Base):
 
     assignment: Mapped["Assignment"] = relationship(back_populates="files")
     
+class User(Base):
+    __tablename__ = "users"
+
+    # Mapped is a type hint provided by SQLAlchemy that indicates that the attribute is mapped to a column in the database table. It allows for better type checking and code completion in IDEs.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+
+    hashed_password: Mapped[str] = mapped_column(String, nullable=False)
+
+    
+
