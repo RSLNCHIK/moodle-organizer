@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 from .services.downloader import download_assignment_files
 from .schemas import SyncResponse, CourseResponse, AssignmentResponse
 from .db.database import SessionLocal
-from .db.repository import save_course, save_assignment, get_all_courses
+from .db.repository import save_course, save_assignment, get_all_courses, get_all_assignments_by_course, get_course_by_id, save_file
+from .db.models import Course, Assignment
 
 from .clients.moodle_client import (
     get_site_info,
@@ -45,23 +46,21 @@ def get_user_courses():
 
 @app.get("/courses/{course_id}/assignments", response_model=list[AssignmentResponse])
 def course_assignments(course_id: int):
-    site_info = get_site_info(url, TOKEN)
 
-    user_id = site_info["userid"]
+    # The course_id parameter is used to identify the specific course for which to retrieve assignments.
+    # The get_all_assignments_by_course function is called with the database session and the course ID to fetch all assignments associated with that course.
+    
+    with SessionLocal() as db:
 
-    moodle_courses = get_courses(url, TOKEN, user_id)
 
-    selected_course = None
+        course = get_course_by_id(db, course_id)
 
-    for course in moodle_courses:
-        if course["id"] == course_id:
-            selected_course = course
-            break
+        if not course:
+            raise HTTPException(status_code=404, detail="Kurs nicht gefunden :(")
+        
+        assignments = get_all_assignments_by_course(db, course_id)
 
-    if selected_course is None:
-        raise HTTPException(status_code=404, detail="Kurs nicht gefunden :(")
-    #     assignments_data
-    # → ganze API-Antwort
+    return assignments
 
     # assignments_data["courses"]
     # → Liste der zurückgegebenen Kurse
@@ -72,13 +71,8 @@ def course_assignments(course_id: int):
     # assignments_data["courses"][0]["assignments"]
     # → Aufgaben dieses Kurses
 
-    assignments_data = get_assignments(url, TOKEN, [selected_course])
-
-    # If there are no courses in the assignments_data, return an empty list
-    if not assignments_data["courses"]:
-        return []
-
-    return assignments_data["courses"][0]["assignments"]
+    # assignments_data = get_assignments(url, TOKEN, [selected_course])
+    
 
 # The response_model parameter specifies the expected response format for the endpoint. In this case, it expects a response that matches the SyncResponse schema defined in app/schemas.py. This allows FastAPI to automatically validate and serialize the response data according to the defined schema.
 
@@ -92,12 +86,19 @@ def sync_moodle():
 
     assignments_data = get_assignments(url, TOKEN, moodle_courses)
 
+
+    downloaded_courses = 0
+    processed_assignments = 0
+    files_downloaded = 0
+    files_skipped = 0
+    
+
     # Save courses to the database
     # The with statement is used to create a context manager for the database session. This ensures that the session is properly closed after the block of code is executed, even if an exception occurs. The SessionLocal() function is called to create a new database session, which is then used to save the courses retrieved from Moodle into the local database using the save_course function. After all courses have been processed, db.commit() is called to persist the changes to the database.
     with SessionLocal() as db:
 
 
-        saved_courses = {}
+        saved_courses: dict[int, Course] = {}
 
         for moodle_course in moodle_courses:
             db_course = save_course(db, moodle_course)
@@ -107,32 +108,42 @@ def sync_moodle():
 
         db.flush()  # Flush the session to generate IDs for new courses
 
+        for moodle_course in assignments_data["courses"]:
+            moodle_course_id = moodle_course["id"]
 
-    downloaded_courses = 0
-    processed_assignments = 0
-    files_downloaded = 0
-    files_skipped = 0
+            # The moodle_course_id is the ID of the current Moodle course being processed. We use this ID to look up the corresponding Course object in the saved_courses dictionary, which contains all the courses that have been saved to the database.
+            db_course = saved_courses[moodle_course_id]
+
+            downloaded_courses += 1
+
+            for assignment in moodle_course["assignments"]:
+
+                processed_assignments += 1
+
+                db_assignments = save_assignment(db, assignment, db_course)
+
+                db.flush()  # Flush the session to generate IDs for new assignments
+
+                attachments = assignment.get("introattachments", [])
 
 
-    for moodle_course in assignments_data["courses"]:
-        moodle_course_id = moodle_course["id"]
+                for moodle_file in attachments:
+                    save_file(db, moodle_file, db_assignments)
 
-        db_course = saved_courses.get(moodle_course_id)
 
-        downloaded_courses += 1
+            # The files download (local)
 
-        for assignment in moodle_course["assignments"]:
+            # downloaded, skipped = download_assignment_files(
+            #         assignment,
+            #         TOKEN,
+            #         moodle_course["fullname"]
+            #     )
 
-            processed_assignments += 1
+            # files_downloaded += downloaded
+            # files_skipped += skipped
 
-            downloaded, skipped =download_assignment_files(assignment, TOKEN, moodle_course["fullname"])
 
-            files_downloaded += downloaded
-            files_skipped += skipped
-
-            save_assignment(db, assignment, db_course)
-
-    db.commit()  # Commit the changes to the database
+        db.commit()  # Commit the changes to the database
 
 
     return {
