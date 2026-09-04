@@ -25,8 +25,11 @@ class CourseResponse(BaseModel):
 class AssignmentResponse(BaseModel):
     id: int
     name: str
-    duedate: int
+    duedate: int | None
+    course_id: int
     intro: Optional[str] = None
     # Optional field for the assignment description, which may not be present in all assignments
     # None is used as the default value to indicate that the field is optional and may be missing in some cases
-    
+    model_config = {
+        "from_attributes": True
+    }
