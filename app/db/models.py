@@ -36,4 +36,21 @@ class Assignment(Base):
 
     course: Mapped["Course"] = relationship(back_populates="assignments")
 
+    # back_populates is used to define a bidirectional relationship between the Assignment and File models. It allows us to access the related files for an assignment and vice versa. The back_populates parameter specifies the attribute name in the related model that coresponds to this relationship. In this case, it indicates that the files attribute in the Assignment model is related to the assignment attribute in the File model.
+    files: Mapped[list["File"]] = relationship(back_populates="assignment")
+
+class File(Base):
+
+    __tablename__="files"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    filename: Mapped[str] = mapped_column(String, nullable=False)
+
+    # The mimetype attribute is a string that represents the MIME type of the file (e.g., "application/pdf", "image/png"). It is optional and can be null in the database.
+    mimetype: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    assignment_id: Mapped[int] = mapped_column(ForeignKey("assignments.id"), nullable=False)
+
+    assignment: Mapped["Assignment"] = relationship(back_populates="files")
     
