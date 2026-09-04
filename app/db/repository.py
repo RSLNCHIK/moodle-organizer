@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .models import Course, Assignment, File
+from .models import Course, Assignment, File, User
 
 
 def save_course(db: Session, moodle_course: dict) -> Course:
@@ -79,3 +79,21 @@ def save_file(db: Session, moodle_file: dict, assignment: Assignment) -> File:
 
     db.add(new_file)
     return new_file
+
+
+def get_user_by_email(db: Session, email: str) -> User | None:
+    statement = select(User).where(User.email == email)
+
+    return db.scalar(statement)
+
+def create_user(db: Session, email: str, hashed_password: str) -> User:
+    # create a new user instance with the provided email and hashed password. The User model is used to reprsent the user data in the database, and the new_user object is created with the specified email and hashed password. This object will be added to the database session for persistence.
+    new_user = User(
+        email=email,
+        hashed_password=hashed_password
+    )
+
+    db.add(new_user)
+    db.commit()  # Commit the transaction to save the new user to the database
+    db.refresh(new_user)  # Refresh the new_user instance to get the updated data from the database (e.g., auto-generated ID)
+    return new_user
