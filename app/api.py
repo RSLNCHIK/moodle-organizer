@@ -3,9 +3,18 @@ from fastapi import FastAPI, HTTPException
 from dotenv import load_dotenv
 
 from .services.downloader import download_assignment_files
-from .schemas import SyncResponse, CourseResponse, AssignmentResponse
+from .services.auth_service import hash_password
+from .schemas import SyncResponse, CourseResponse, AssignmentResponse, UserCreate, UserResponse
 from .db.database import SessionLocal
-from .db.repository import save_course, save_assignment, get_all_courses, get_all_assignments_by_course, get_course_by_id, save_file
+from .db.repository import (save_course, 
+                            save_assignment, 
+                            get_all_courses, 
+                            get_all_assignments_by_course, 
+                            get_course_by_id, 
+                            save_file,
+                            get_user_by_email,
+                            create_user
+                            )
 from .db.models import Course, Assignment
 
 from .clients.moodle_client import (
@@ -153,3 +162,21 @@ def sync_moodle():
             "files_downloaded": files_downloaded,
             "files_already_existing": files_skipped
         }
+
+
+@app.post("/register", response_model=UserResponse, status_code=201)
+def register_user(user: UserCreate):
+    with SessionLocal() as db:
+        existing_user = get_user_by_email(db, user.email)
+
+        if existing_user:
+            raise HTTPException(status_code=409, detail="Benutzer mit dieser E-Mail existiert bereits.")
+
+        hashed_password = hash_password(user.password)
+
+        new_user = create_user(db, user.email, hashed_password)
+
+        db.commit()  # Commit the transaction to save the new user to the database
+        db.refresh(new_user)  # Refresh the new_user instance to get the updated data from the database
+
+        return new_user
