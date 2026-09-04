@@ -9,6 +9,9 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+
+if DATABASE_URL is None:
+    raise RuntimeError("DATABASE_URL environment variable is not set. Please check your .env file.")
 # Create a SQLAlchemy engine to connect to the PostgreSQL database
 # Connecting to the database using the provided DATABASE_URL from the environment variables
 engine = create_engine(DATABASE_URL)
