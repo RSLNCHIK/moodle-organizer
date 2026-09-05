@@ -97,3 +97,10 @@ def create_user(db: Session, email: str, hashed_password: str) -> User:
     db.commit()  # Commit the transaction to save the new user to the database
     db.refresh(new_user)  # Refresh the new_user instance to get the updated data from the database (e.g., auto-generated ID)
     return new_user
+
+
+def get_user_by_id(db: Session, user_id: int) -> User | None:
+
+    statement = select(User).where(User.id == user_id)
+
+    return db.scalar(statement)
