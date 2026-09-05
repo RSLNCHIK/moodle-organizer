@@ -1,10 +1,19 @@
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from dotenv import load_dotenv
 
+from fastapi.security import OAuth2PasswordBearer
+
 from .services.downloader import download_assignment_files
-from .services.auth_service import hash_password
-from .schemas import SyncResponse, CourseResponse, AssignmentResponse, UserCreate, UserResponse
+from .services.auth_service import hash_password, verify_password, create_access_token, decode_access_token, get_current_user
+from .schemas import (SyncResponse, 
+                      CourseResponse, 
+                      AssignmentResponse, 
+                      UserCreate, 
+                      UserResponse,
+                      UserLogin,
+                      TokenResponse
+                      )
 from .db.database import SessionLocal
 from .db.repository import (save_course, 
                             save_assignment, 
@@ -13,9 +22,11 @@ from .db.repository import (save_course,
                             get_course_by_id, 
                             save_file,
                             get_user_by_email,
-                            create_user
+                            create_user,
+                            get_user_by_id
+                            
                             )
-from .db.models import Course, Assignment
+from .db.models import Course, Assignment, User
 
 from .clients.moodle_client import (
     get_site_info,
@@ -86,7 +97,7 @@ def course_assignments(course_id: int):
 # The response_model parameter specifies the expected response format for the endpoint. In this case, it expects a response that matches the SyncResponse schema defined in app/schemas.py. This allows FastAPI to automatically validate and serialize the response data according to the defined schema.
 
 @app.post("/sync", response_model=SyncResponse)
-def sync_moodle():
+def sync_moodle(current_user: User = Depends(get_current_user)):
     site_info = get_site_info(url, TOKEN)
 
     user_id = site_info["userid"]
@@ -139,19 +150,6 @@ def sync_moodle():
                 for moodle_file in attachments:
                     save_file(db, moodle_file, db_assignments)
 
-
-            # The files download (local)
-
-            # downloaded, skipped = download_assignment_files(
-            #         assignment,
-            #         TOKEN,
-            #         moodle_course["fullname"]
-            #     )
-
-            # files_downloaded += downloaded
-            # files_skipped += skipped
-
-
         db.commit()  # Commit the changes to the database
 
 
@@ -161,7 +159,7 @@ def sync_moodle():
             "assignments_processed": processed_assignments,
             "files_downloaded": files_downloaded,
             "files_already_existing": files_skipped
-        }
+    }
 
 
 @app.post("/register", response_model=UserResponse, status_code=201)
@@ -180,3 +178,30 @@ def register_user(user: UserCreate):
         db.refresh(new_user)  # Refresh the new_user instance to get the updated data from the database
 
         return new_user
+
+
+@app.post("/login", response_model=TokenResponse)
+def login_user(user_data: UserLogin):
+    with SessionLocal() as db:
+        user = get_user_by_email(db, user_data.email)
+
+        if user is None:
+            raise HTTPException(status_code=401, detail="Ungültige E-Mail oder Passwort.")
+
+        password_correct = verify_password(user_data.password, user.hashed_password)
+
+        if not password_correct:
+            raise HTTPException(status_code=401, detail="Ungültige E-Mail oder Passwort.")
+
+
+        # Generate an access token for the authenticated user using the create_access_token function from the auth_service module.
+        token = create_access_token(user.id)
+
+        return {
+            "access_token": token,
+            "token_type": "bearer"
+        }
+
+
+
+    
