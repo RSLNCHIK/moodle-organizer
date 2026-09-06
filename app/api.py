@@ -2,7 +2,7 @@ import os
 from fastapi import FastAPI, HTTPException, Depends
 from dotenv import load_dotenv
 
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordRequestForm
 
 from .services.downloader import download_assignment_files
 from .services.auth_service import hash_password, verify_password, create_access_token, decode_access_token, get_current_user
@@ -12,18 +12,22 @@ from .schemas import (SyncResponse,
                       UserCreate, 
                       UserResponse,
                       UserLogin,
-                      TokenResponse
+                      TokenResponse,
+                      FileResponse
                       )
 from .db.database import SessionLocal
 from .db.repository import (save_course, 
                             save_assignment, 
-                            get_all_courses, 
+                            get_courses_by_user, 
                             get_all_assignments_by_course, 
                             get_course_by_id, 
                             save_file,
                             get_user_by_email,
                             create_user,
-                            get_user_by_id
+                            get_user_by_id,
+                            get_course_by_id_and_user,
+                            get_assignment_by_id_and_user,
+                            get_files_by_assignment
                             
                             )
 from .db.models import Course, Assignment, User
@@ -56,16 +60,16 @@ def root():
 
 # the response_model parameter specifies the expected response format for the endpoint. In this case, it expectes a response that matches the CourseResponse schema defined in app/schemas.py. This allows FastAPI to automatically validate and serialize the response data according to the defined schema.
 @app.get("/courses", response_model=list[CourseResponse])
-def get_user_courses():
-
+def get_user_courses(current_user: User = Depends(get_current_user)):
+    # The current_user parameter is a dependency that retrieves the currently authenticated user using the get_current_user function from the auth_service module. This ensures that only authenticated users can access this endpoint and retrieve their courses. 
     with SessionLocal() as db:
         # Retrieve all courses from the database using the get_all_courses function, which queries the Course table and returns a list of Course objects. This allows us to fetch the courses that have been previously saved in the local database.
-        courses = get_all_courses(db)
+        courses = get_courses_by_user(db, current_user.id)
 
         return courses
 
 @app.get("/courses/{course_id}/assignments", response_model=list[AssignmentResponse])
-def course_assignments(course_id: int):
+def course_assignments(course_id: int, current_user: User = Depends(get_current_user)):
 
     # The course_id parameter is used to identify the specific course for which to retrieve assignments.
     # The get_all_assignments_by_course function is called with the database session and the course ID to fetch all assignments associated with that course.
@@ -73,7 +77,8 @@ def course_assignments(course_id: int):
     with SessionLocal() as db:
 
 
-        course = get_course_by_id(db, course_id)
+
+        course = get_course_by_id_and_user(db, course_id, current_user.id)
 
         if not course:
             raise HTTPException(status_code=404, detail="Kurs nicht gefunden :(")
@@ -121,7 +126,7 @@ def sync_moodle(current_user: User = Depends(get_current_user)):
         saved_courses: dict[int, Course] = {}
 
         for moodle_course in moodle_courses:
-            db_course = save_course(db, moodle_course)
+            db_course = save_course(db, moodle_course, current_user.id)
 
             # The saved_courses dictionary is used to keep track of the courses that have been saved to the database. The key is the Moodle course ID, and the value is the corresponding Course object from the database. This allows us to easily reference the saved courses later when saving assignments, ensuring that each assignment is associated with the correct course in the database.
             saved_courses[moodle_course["id"]] = db_course
@@ -181,14 +186,15 @@ def register_user(user: UserCreate):
 
 
 @app.post("/login", response_model=TokenResponse)
-def login_user(user_data: UserLogin):
+def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
+    # The form_data parameter is an instance of OAuth2PasswordRequestForm, which is a FastAPI utility that automatically parses the incoming request data for the login endpoint. It extracts the username and password from the request body, allowing us to easily access the user's credentials for authentication purposes.
     with SessionLocal() as db:
-        user = get_user_by_email(db, user_data.email)
+        user = get_user_by_email(db, form_data.username)
 
         if user is None:
             raise HTTPException(status_code=401, detail="Ungültige E-Mail oder Passwort.")
 
-        password_correct = verify_password(user_data.password, user.hashed_password)
+        password_correct = verify_password(form_data.password, user.hashed_password)
 
         if not password_correct:
             raise HTTPException(status_code=401, detail="Ungültige E-Mail oder Passwort.")
@@ -202,6 +208,16 @@ def login_user(user_data: UserLogin):
             "token_type": "bearer"
         }
 
+@app.get("/assignments/{assignment_id}/files", response_model=list[FileResponse])
+def assignment_files(assignment_id: int, current_user: User = Depends(get_current_user)):
 
+    with SessionLocal() as db:
 
+        assignment = get_assignment_by_id_and_user(db, assignment_id, current_user.id)
+
+        if assignment is None:
+            raise HTTPException(status_code=404, detail="Aufgabe nicht gefunden.")
+
+        files = get_files_by_assignment(db, assignment_id)
+        return files
     
