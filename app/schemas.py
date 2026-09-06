@@ -55,5 +55,16 @@ class UserLogin(BaseModel):
 
 
 class TokenResponse(BaseModel):
-    acess_token: str
+    access_token: str
     token_type: str
+
+class FileResponse(BaseModel):
+    id: int
+    filename: str
+    mimetype: Optional[str] = None
+    assignment_id: int
+
+    model_config = {
+        "from_attributes": True
+
+    }
