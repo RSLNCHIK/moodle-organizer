@@ -20,6 +20,11 @@ class Course(Base):
     assignments: Mapped[list["Assignment"]] = relationship(back_populates="course")
 
 
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+
+    user: Mapped["User"] = relationship(back_populates="courses")
+ 
+
 class Assignment(Base):
     __tablename__ = "assignments"
 
@@ -64,5 +69,7 @@ class User(Base):
 
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
 
+    # back_populates is used to define a bidirectional relationship between the User and Course models. It allows us to access the related courses for a user and vice versa. The back_populates parameter specifies the attribute name in the related model that corresponds to this relationship. In this case, it indicates that the courses attribute in the User model is related to the user attribute in the Course model.
+    courses: Mapped[list["Course"]] = relationship(back_populates="user")
     
 
