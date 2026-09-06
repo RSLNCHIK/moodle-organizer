@@ -6,8 +6,8 @@ from jose import jwt, JWTError
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 
-from db.database import SessionLocal
-from db.repository import get_user_by_id
+from app.db.database import SessionLocal
+from app.db.repository import get_user_by_id
 
 
 password_hash = PasswordHash.recommended()
@@ -59,10 +59,11 @@ def decode_access_token(token: str) -> int | None:
         return None
     
 
-
+# The oath2_scheme variable is an instance of the OAuth2PasswordBearer class, which is a FastAPI security utility that provides a way to handle OAuth2 authentication using bearer tokens. It specifies the tokenUrl parameter, which indicates the URL where clients can obtain access tokens. In this case, the tokenUrl is set to "/login", meaning that clients will need to send their credentials to the "/login" endpoint to receive an access token.
 oath2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 # Depends is a FastAPI dependency injection system that allows us to declare dependencies for oauth2_scheme. It automatically extracts the token from the request and passes it to the get_current_user function, which can then use it to authenticate the user.
+# str = Depends(oath2_scheme) means that the token parameter in the get_current_user function will be automatically populated with the value of the access token extracted from the request's Authorization header. This allows us to easily access the token and use it for authentication purposes without having to manually parse the request headers.
 def get_current_user(token: str = Depends(oath2_scheme)):
     user_id = decode_access_token(token)
 
