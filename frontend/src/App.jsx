@@ -1,122 +1,109 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import CourseList from "./components/CourseList";
+import Navbar from "./components/Navbar";
+import LoginForm from "./components/LoginForm";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [token, setToken] = useState(
+    localStorage.getItem("access_token")
+  );
+
+  const [courses, setCourses] = useState([]);
+  const [error, setError] = useState("");
+
+  async function handleLogin(event) {
+    event.preventDefault();
+
+    setError("");
+
+    const formData = new URLSearchParams();
+    formData.append("username", email);
+    formData.append("password", password);
+
+    const response = await fetch(
+      "http://127.0.0.1:8000/login",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/x-www-form-urlencoded",
+        },
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      setError("Login fehlgeschlagen");
+      return;
+    }
+
+    const data = await response.json();
+
+    localStorage.setItem(
+      "access_token",
+      data.access_token
+    );
+
+    setToken(data.access_token);
+  }
+
+  async function loadCourses(currentToken) {
+    const response = await fetch(
+      "http://127.0.0.1:8000/courses",
+      {
+        headers: {
+          Authorization: `Bearer ${currentToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      return;
+    }
+
+    const data = await response.json();
+    setCourses(data);
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("access_token");
+    setToken(null);
+    setCourses([]);
+  }
+
+  // UseEffect is a React hook that allows to perform side effects in function components. In this case, it is used to load the courses when the token changes.
+  useEffect(() => {
+    if (token) {
+      loadCourses(token);
+    }
+  }, [token]);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="min-h-screen bg-gray-100">
+      {!token ? (
+        <LoginForm
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+          handleLogin={handleLogin}
+          error={error}
+        />
+      ) : (
+        // p-8 is used to add padding of 2 rem (32px) to all sides of the cotainer.
+        <div className="mx-auto max-w-5xl p-8">
 
-      <div className="ticks"></div>
+          <Navbar handleLogout={handleLogout} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <CourseList courses={courses} />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;
