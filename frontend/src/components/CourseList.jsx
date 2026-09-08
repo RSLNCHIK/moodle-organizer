@@ -1,4 +1,4 @@
-function CourseList({ courses }) {
+function CourseList({ courses, onCourseClick}) {
     return (
         <div>
             {/* // mb-4 is a Tailwind CSS class that adds a margin-bottom of 1rem (16px) to the element. This is used to create space between the heading and the list of courses.
@@ -18,7 +18,10 @@ function CourseList({ courses }) {
                 // bg-white is used to set the background color of the course card to white.
                 // p-5 is used to add padding of 1.25rem (20px) to the course card. padding is used to create space between the content of the card and its border.
                 // shadow-sm is used to add a small shadow to the course card. This is used to create a sense of depth and make the card stand out from the background.
-                    <div key={course.id} className="rounded-xl bg-white p-5 shadow-sm">
+                // shadow-md is used to add a medium shadow to the course card when the user hovers over it.
+                    <div key={course.id}
+                    onClick={() => onCourseClick(course.id)}
+                    className="cursor-pointer rounded-xl bg-white p-5 hover:shadow-md">
                         <h3 className="font-semibold"> {course.fullname} </h3>
                     </div>
                 ))}
