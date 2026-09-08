@@ -86,6 +86,14 @@ function App() {
   // ${token} comes from the state variable token, which is set when the user logs in. It is used to authenticate the request to the backend API.
   // loadAssignments takes a ${token} from the localStorage
   async function loadAssignments(courseId) {
+
+    // setSelectedCourse is used to set the state variable selectedCourse with the courseId received from the backend API. This is used to display the assignments of the selected course in the frontend.
+    setSelectedCourse(courseId);
+
+    // setSelectedAssignment is used to set the state variable selectedAssignment to null. This is used to clear the selected assignment when a new course is selected.
+    setSelectedAssignment(null);
+    // setFiles is used to set the state variable files to an empty array. This is used to clear the files when a new course is selected.
+    setFiles([]);
     const response = await fetch(`http://127.0.0.1:8000/courses/${courseId}/assignments`, {
       method: "GET",
       headers: {
@@ -139,6 +147,8 @@ function App() {
     }
   }, [token]);
 
+  // {selectedAssignment && <FileList files={files} /> } is a conditional rendering that checks if selectedAssignment is not null. If it is not null, it renders the FileList component with the files prop set to the files state variable. This is used to display the files of the selected assignment in the frontend.
+
   return (
     <div className="min-h-screen bg-gray-100">
       {!token ? (
@@ -155,20 +165,34 @@ function App() {
         // mb-3 is used to add a margin-bottom of 0.75 rem (12px) to the assignment card.
         // gap-4 is used to add a gap of 1 rem (16px) between the assignment cards.
         // space-y-2 is used to add a vertical space of 0.5rem (8px) between the assignment cards.
-        <div className="mx-auto max-w-5xl p-8">
+        // mx-auto is used to center the container horizontally in the viewport. mx stands for margin-left and margin-right, and auto is used to set the left and right margins to equal values, effectively centering the container.
+        // max-w-5xl is used to set the maximum width of the container to 80rem (1280px). This is used to prevent the container from becoming to width on large screens and to margin the content 
+        // p-8 is used to add padding of 2 rem (32px) to all sides of the container. This is used to create space between the content of the container and its blorder
+        <div className="mx-auto max-w-7xl p-8">
 
           <Navbar handleLogout={handleLogout} />
 
-          <CourseList courses={courses} onCourseClick={loadAssignments}/>
-          {selectedCourse && (
-          // mt-8 is used to add a margin-top of 2 rem (32px) to the container. This is used to create space between the list of courses and the list of assignments.
-            <AssignmentList assignments={assignments} onAssignmentClick={loadFiles} />
-          )}
+          <div className="grid gap-6 lg:grid-cols-3">
 
-          {selectedAssignment && (
-            <FileList files={files} />
-          )}
+            <CourseList
+              courses={courses}
+              onCourseClick={loadAssignments}
+              selectedCourse={selectedCourse}
+            />
 
+            <AssignmentList
+              assignments={assignments}
+              onAssignmentClick={loadFiles}
+              selectedCourse={selectedCourse}
+            />
+
+
+            <FileList
+              files={files}
+              selectedAssignment={selectedAssignment}
+            />
+          
+          </div>
         </div>
       )}
     </div>

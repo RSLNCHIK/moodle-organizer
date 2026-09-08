@@ -1,6 +1,6 @@
 function FileList({ files }) {
     return (
-        <div className="mt-8">
+        <section>
             <h2 className="mb-4 text-xl font-semibold">
                 Dateien
             </h2>
@@ -16,9 +16,10 @@ function FileList({ files }) {
                 ))}
             </div>
 
-        </div>
+        </section>
     )
 
 }
+// section is used to create a semantic section of the page that contains the list of files. This is used to group related content together and to improve the accessibility of the page.
 
 export default FileList;
