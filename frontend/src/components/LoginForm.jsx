@@ -1,74 +1,116 @@
+import InteractiveGridBackground from "./InteractiveGridBackground";
+import { useNavigate } from "react-router-dom";
+
 function LoginForm({
-    email,
-    setEmail,
-    password,
-    setPassword,
-    handleLogin,
-    error,
-    onBack
+  email,
+  setEmail,
+  password,
+  setPassword,
+  handleLogin,
+  error,
+  isLoggingIn
 }) {
-    return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-100">
+
+  const navigate = useNavigate();
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-slate-50">
+      <InteractiveGridBackground />
+
+      {/* weiche Farbflächen im Hintergrund */}
+      <div className="pointer-events-none absolute left-1/4 top-1/3 h-72 w-72 rounded-full bg-violet-200/40 blur-3xl" />
+
+      <div className="pointer-events-none absolute bottom-1/4 right-1/4 h-72 w-72 rounded-full bg-blue-200/40 blur-3xl" />
+
+      {/* Inhalt */}
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-4">
+        <div className="w-full max-w-sm">
+          <div className="mb-6 flex items-center justify-center">
+            <span className="text-2xl font-bold text-blue-600">
+              Moodle Organizer
+            </span>
+          </div>
+
+          {/* Login Card */}
           <form
             onSubmit={handleLogin}
-            className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg"
+            className="rounded-2xl bg-white p-7 shadow-xl shadow-gray-200/70"
           >
             <button
               type="button"
-              onClick={onBack}
-              className="mb-4 cursor-pointer text-sm text-gray-600 hover:text-violet-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-600"
+              onClick={() => navigate("/")}
+              className="mb-5 cursor-pointer text-sm font-medium text-gray-500 transition hover:text-gray-900"
             >
-              Zur Startseite
+              ← Zur Startseite
             </button>
-            <h1 className="mb-6 text-3xl font-bold">
-              Moodle Organizer
-            </h1>
 
-            <div className="mb-4">
-              <label className="mb-1 block font-medium">
+            <div className="mb-7 text-center">
+              <h1 className="text-2xl font-bold text-gray-900">
+                Welcome back
+              </h1>
+
+              <p className="mt-2 text-sm text-gray-500">
+                Sign in to continue to your courses.
+              </p>
+            </div>
+
+            {/* E-Mail */}
+            <div className="mb-5">
+              <label htmlFor="email" className="mb-2 block text-sm font-semibold text-gray-800">
                 E-Mail
               </label>
 
               <input
+                id="email"
+                required
+                autoComplete="username"
                 type="email"
                 value={email}
                 onChange={(event) =>
                   setEmail(event.target.value)
                 }
-                className="w-full rounded-lg border border-gray-300 px-4 py-2"
+                placeholder="you@example.com"
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
 
-            <div className="mb-4">
-              <label className="mb-1 block font-medium">
+            {/* Passwort */}
+            <div className="mb-6">
+              <label htmlFor="password" className="mb-2 block text-sm font-semibold text-gray-800">
                 Passwort
               </label>
 
               <input
+                id="password"
+                required
+                autoComplete="current-password"
                 type="password"
                 value={password}
                 onChange={(event) =>
                   setPassword(event.target.value)
                 }
-                className="w-full rounded-lg border border-gray-300 px-4 py-2"
+                placeholder="••••••••"
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
 
             {error && (
-              <p className="mb-4 text-red-600">
+              <p className="mb-4 text-sm text-red-600">
                 {error}
               </p>
             )}
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-black px-4 py-2 font-medium text-white hover:bg-gray-800"
+              disabled={isLoggingIn}
+              className="w-full cursor-pointer rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60 disabled:cursor-wait disabled:hover:bg-blue-600"
             >
-              Einloggen
+              {isLoggingIn ? "Logging in..." : "Continue"}
             </button>
           </form>
         </div>
-    )
+      </div>
+    </div>
+  );
 }
 
-export default LoginForm
+export default LoginForm;
