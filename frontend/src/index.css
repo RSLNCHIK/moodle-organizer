@@ -112,3 +112,17 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+@keyframes tileFade {
+  0% {
+    opacity: 0.7;
+  }
+
+  40% {
+    opacity: 0.45;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
