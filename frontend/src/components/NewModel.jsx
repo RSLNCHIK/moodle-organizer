@@ -1,6 +1,8 @@
 import BackgroundTile from "./BackgroundTile";
+import { useNavigate } from "react-router-dom";
 
-function NewModel({ onContinue }) {
+function NewModel() {
+    const navigate = useNavigate();
 
     // 8 Spalten mal 5 Reihen: ein begrenztes Raster hinter dem Inhalt.
     // Die Nummern bleiben gleich, damit React jedes Kaestchen wiedererkennt.
@@ -71,14 +73,24 @@ function NewModel({ onContinue }) {
                 <div className="mt-8 gap-3 flex justify-center">
                     <button
                         type="button"
-                        onClick={onContinue}
+                        onClick={() => navigate("/login")}
                         className="pointer-events-auto inline-flex cursor-pointer justify-center items-center gap-x-3 text-center bg-linear-to-tl from-violet-600 to-blue-600 hover:from-blue-600 hover:to-violet-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-600 text-white text-sm font-medium rounded-full py-3 px-4"
                     >
-                        Continue with Moodle
+
+                        <img
+                            src="/moodle-icon-white.svg"
+                            alt=""
+                            className="size-6 shrink-0 object-contain"
+                        />
+
+                        
+                        {/* <img src="/moodle_logo_2.png" alt="Moodle Logo" className="size-6 shrink-0 object-contain" /> */}
+                        <span className="font-semibold">Continue with Moodle</span>
                         <svg aria-hidden="true" className="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M5 12h14m-6-6 6 6-6 6" />
                         </svg>
                     </button>
+
                 </div>
                 {/* <!-- End Buttons --> */}
 
