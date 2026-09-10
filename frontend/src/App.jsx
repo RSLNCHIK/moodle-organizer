@@ -75,6 +75,9 @@ function App() {
 
       setToken(data.access_token);
 
+      // navigate to the dashboard after successful login
+      navigate("/dashboard");
+
     } catch {
       setError("Anmeldung konnte nicht abgeschlossen werden");
     } finally {
@@ -103,10 +106,17 @@ function App() {
 
   function handleLogout() {
     localStorage.removeItem("access_token");
+
     setToken(null);
     setCourses([]);
-    setPassword("");
+    setAssignments([]);
+    setFiles([]);
+    setSelectedCourse(null);
+    setSelectedAssignment(null);
+    
     setError("");
+
+    navigate("/login");
   }
 
   // ${token} comes from the state variable token, which is set when the user logs in. It is used to authenticate the request to the backend API.
@@ -221,7 +231,7 @@ function App() {
               selectedCourse={selectedCourse}
             />
 
-            
+
             <FileList
               files={files}
               selectedAssignment={selectedAssignment}
