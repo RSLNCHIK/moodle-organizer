@@ -4,8 +4,11 @@ import Navbar from "./components/Navbar";
 import LoginForm from "./components/LoginForm";
 import AssignmentList from "./components/AssignmentList";
 import FileList from "./components/FileList";
+import NewModel from "./components/NewModel";
 
 function App() {
+  // Die Ansicht vor der Anmeldung: Startseite oder Loginformular.
+  const [page, setPage] = useState("start");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -81,6 +84,15 @@ function App() {
     localStorage.removeItem("access_token");
     setToken(null);
     setCourses([]);
+    setPassword("");
+    setError("");
+    setPage("start");
+  }
+
+  function showStartPage() {
+    setPassword("");
+    setError("");
+    setPage("start");
   }
 
   // ${token} comes from the state variable token, which is set when the user logs in. It is used to authenticate the request to the backend API.
@@ -152,14 +164,19 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-100">
       {!token ? (
-        <LoginForm
-          email={email}
-          setEmail={setEmail}
-          password={password}
-          setPassword={setPassword}
-          handleLogin={handleLogin}
-          error={error}
-        />
+        page === "start" ? (
+          <NewModel onContinue={() => setPage("login")} />
+        ) : (
+          <LoginForm
+            email={email}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            handleLogin={handleLogin}
+            error={error}
+            onBack={showStartPage}
+          />
+        )
       ) : (
         // p-8 is used to add padding of 2 rem (32px) to all sides of the cotainer.
         // mb-3 is used to add a margin-bottom of 0.75 rem (12px) to the assignment card.
