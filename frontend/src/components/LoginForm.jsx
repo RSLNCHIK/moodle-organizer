@@ -4,7 +4,8 @@ function LoginForm({
     password,
     setPassword,
     handleLogin,
-    error
+    error,
+    onBack
 }) {
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-100">
@@ -12,6 +13,13 @@ function LoginForm({
             onSubmit={handleLogin}
             className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg"
           >
+            <button
+              type="button"
+              onClick={onBack}
+              className="mb-4 cursor-pointer text-sm text-gray-600 hover:text-violet-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-600"
+            >
+              Zur Startseite
+            </button>
             <h1 className="mb-6 text-3xl font-bold">
               Moodle Organizer
             </h1>
