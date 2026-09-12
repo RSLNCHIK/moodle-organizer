@@ -5,7 +5,7 @@ import LoginForm from "./components/LoginForm";
 import AssignmentList from "./components/AssignmentList";
 import FileList from "./components/FileList";
 import NewModel from "./components/NewModel";
-
+import RegisterForm from "./components/RegisterForm";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
 function App() {
@@ -206,6 +206,16 @@ function App() {
             isLoggingIn={isLoggingIn}
             />
         )
+      }
+    />
+
+    {/* Registrierungsformular */}
+    <Route path="/register" element={
+      token ? (
+        <Navigate to="dashboard" />
+      ) : (
+        <RegisterForm />
+      )
       }
     />
 
