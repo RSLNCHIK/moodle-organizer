@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 from fastapi.security import OAuth2PasswordRequestForm
 
+from services.token_crypto import encrypt_token
 from .services.downloader import download_assignment_files
 from .services.auth_service import hash_password, verify_password, create_access_token, decode_access_token, get_current_user
 from .schemas import (SyncResponse, 
@@ -16,7 +17,9 @@ from .schemas import (SyncResponse,
                       UserResponse,
                       UserLogin,
                       TokenResponse,
-                      FileResponse
+                      FileResponse,
+                      MoodleConnectionCreate,
+                      MoodleConnectionResponse
                       )
 from .db.database import SessionLocal
 from .db.repository import (save_course, 
@@ -30,8 +33,8 @@ from .db.repository import (save_course,
                             get_user_by_id,
                             get_course_by_id_and_user,
                             get_assignment_by_id_and_user,
-                            get_files_by_assignment
-                            
+                            get_files_by_assignment,
+                            save_moodle_connection
                             )
 from .db.models import Course, Assignment, User
 
@@ -231,4 +234,38 @@ def assignment_files(assignment_id: int, current_user: User = Depends(get_curren
 
         files = get_files_by_assignment(db, assignment_id)
         return files
-    
+
+@app.post("/moodle-connection", response_model=MoodleConnectionResponse)
+def connect_moodle(connection_data: MoodleConnectionCreate, current_user: User = Depends(get_current_user)):
+    base_url = connection_data.base_url
+    token = connection_data.token
+
+    try:
+        site_info = get_site_info(base_url, token)
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Moodle konnte nicht erreicht werden.")
+
+    # The site_info variable is expected to be a dictionary containing information about the Moodle site
+
+    # not isinstance(site_info, dict) or "userid" not in site_info:
+    # This condition checks if the site_info variable is not a dictionary or if it does not contain the "userid" key. If either of these conditions is true, it means that the Moodle URL is invalid or the provided token is invalid.
+
+    if (
+        not isinstance(site_info, dict) or 
+        "userid" not in site_info):
+        raise HTTPException(status_code=400, detail="Moodle-URL ist unguelitig oder Token ist ungueltig.")    
+
+    encrypted_token = encrypt_token(token)
+
+    with SessionLocal() as db:
+        moodle_connection = save_moodle_connection(db=db, user_id=current_user.id, base_url=base_url, encrypted_token=encrypted_token)
+
+        db.commit() # Commit the transaction to save the Moodle connection to the database
+
+
+    return {
+        "message": "Moodle-Verbindung erfolgreich gespeichert.",
+        "base_url": base_url
+    }
+
