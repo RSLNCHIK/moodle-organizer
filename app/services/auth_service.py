@@ -45,7 +45,9 @@ def create_access_token(user_id: int) -> str:
 def decode_access_token(token: str) -> int | None:
 
     try:
-
+        # payload is a dictionary that contains the claims extracted from the JWT.
+        # The jwt.decode function is used to decode the JWT using the specified SECRET_KEY and ALGORITHM.
+        # The result is a dictionary containing the claims, which can be accessed to retrieve information about the user and the token's expiration time.
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
         user_id = payload.get("sub")
