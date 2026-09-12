@@ -22,6 +22,8 @@ function LoginForm({
       <div className="pointer-events-none absolute bottom-1/4 right-1/4 h-72 w-72 rounded-full bg-blue-200/40 blur-3xl" />
 
       {/* Inhalt */}
+      // relative is used to position the div element relative to its normal position in the document flow.
+      // z-10 is used to set the z-index of the div element to 10, which determines its stacking order relative to other elements on the page. A higher z-index value means the element will be displayed in front of elements with lower z-index values.
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4">
         <div className="w-full max-w-sm">
           <div className="mb-6 flex items-center justify-center">
@@ -106,6 +108,20 @@ function LoginForm({
             >
               {isLoggingIn ? "Logging in..." : "Continue"}
             </button>
+
+
+            {/* // Register Link, if the user does not have an account, they can navigate to the register page */}
+              <p className="relative top-3 text-center text-sm text-gray-500">
+                Noch kein Konto?{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate("/register")}
+                  className="cursor-pointer text-sm font-medium text-blue-600 transition hover:text-blue-800"
+                >
+                  Konto erstellen
+                </button>
+              </p>
+
           </form>
         </div>
       </div>
