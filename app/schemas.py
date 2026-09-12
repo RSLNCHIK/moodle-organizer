@@ -68,3 +68,11 @@ class FileResponse(BaseModel):
         "from_attributes": True
 
     }
+
+class MoodleConnectionCreate(BaseModel):
+    base_url: str
+    token: str
+
+class MoodleConnectionResponse(BaseModel):
+    message: str
+    base_url: str
