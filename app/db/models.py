@@ -83,7 +83,7 @@ class MoodleConnection(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
-    used_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True, nullable=False)
 
     base_url: Mapped[str] = mapped_column(String, nullable=False)
 
