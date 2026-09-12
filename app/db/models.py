@@ -71,5 +71,26 @@ class User(Base):
 
     # back_populates is used to define a bidirectional relationship between the User and Course models. It allows us to access the related courses for a user and vice versa. The back_populates parameter specifies the attribute name in the related model that corresponds to this relationship. In this case, it indicates that the courses attribute in the User model is related to the user attribute in the Course model.
     courses: Mapped[list["Course"]] = relationship(back_populates="user")
+
+    # The moodle_connection attribute is a one-to-one relationship between the User and MoodleConnection models. It allows us to access the related MoodleConnection for a user and vice versa. The back_populates parameter specifies the attribute name in the related model that corresponds to this relationship. In this case, it indicates that the user attribute in the MoodleConnection model is related to the moodle_connection attribute in the User model.
+    # relationship is used to define the relationship between the User and MoodleConnection models. 
+    # It allows us to access the related MoodleConnection for a user and vice versa. The back_populates parameter specifies the attribute name in the related moodle_connection model that corresponds to this relationship.
+    moodle_connection: Mapped["MoodleConnection | None"] = relationship(back_populates="user")
     
 
+class MoodleConnection(Base):
+    __tablename__ = "moodle_connections"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    used_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True, nullable=False)
+
+    base_url: Mapped[str] = mapped_column(String, nullable=False)
+
+    encrypted_token: Mapped[str] = mapped_column(String, nullable=False)
+
+    # back_populates is used to define a bidirectional relationship between the MoodleConnection and User models.
+    # It allows us to access the related user for a MoodleConnection and vice versa.
+    # The back_populates parameter specifies the attribute name in the related model that corresponds to this relationship.
+
+    user: Mapped["User"] = relationship(back_populates="moodle_connection")
