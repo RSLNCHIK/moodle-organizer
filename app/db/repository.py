@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .models import Course, Assignment, File, User
+from .models import Course, Assignment, File, User, MoodleConnection
 
 
 def save_course(db: Session, moodle_course: dict, user_id: int) -> Course:
@@ -131,3 +131,29 @@ def get_files_by_assignment(db: Session, assignment_id: int) -> list[File]:
     statement = select(File).where(File.assignment_id == assignment_id)
 
     return list(db.scalars(statement).all())
+
+
+def get_moodle_connection_by_user(db: Session, user_id: int) -> MoodleConnection | None:
+    statement = select(MoodleConnection).where(MoodleConnection.user_id == user_id)
+
+    return db.scalar(statement)
+
+def save_moodle_connection(db: Session, user_id: int, base_url: str, encrypted_token: str) -> MoodleConnection:
+    existing = get_moodle_connection_by_user(db, user_id)
+
+    if existing:
+        existing.base_url = base_url
+        existing.encrypted_token = encrypted_token
+
+        return existing
+
+    new_connection = MoodleConnection(
+        user_id=user_id,
+        base_url=base_url,
+        encrypted_token=encrypted_token
+    )
+
+    db.add(new_connection)
+    return new_connection
+    
+    
