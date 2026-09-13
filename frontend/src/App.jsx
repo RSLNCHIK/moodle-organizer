@@ -7,6 +7,7 @@ import FileList from "./components/FileList";
 import NewModel from "./components/NewModel";
 import RegisterForm from "./components/RegisterForm";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import ConnectMoodle from "./components/ConnectMoodle";
 
 function App() {
   // Die Ansicht vor der Anmeldung: Startseite oder Loginformular.
@@ -68,15 +69,36 @@ function App() {
 
       const data = await response.json();
 
+      const newToken = data.access_token;
+
       localStorage.setItem(
         "access_token",
-        data.access_token
+        newToken
       );
 
-      setToken(data.access_token);
+      setToken(newToken);
+
+      const connectionResponse = await fetch(
+        "http://127.0.0.1:8000/moodle-connection/status",
+        {
+          headers: {
+            Authorization: `Bearer ${newToken}`
+          }
+        }
+      );
+
+      const connectionData = await connectionResponse.json();
+
+      if (connectionData.connected) {
+        navigate("/dashboard");
+      } else {
+        navigate("/connect-moodle");
+      }
 
       // navigate to the dashboard after successful login
-      navigate("/dashboard");
+      // navigate("/connect-moodle");
+
+
 
     } catch {
       setError("Anmeldung konnte nicht abgeschlossen werden");
@@ -193,9 +215,6 @@ function App() {
 
       {/* Loginformular */}
       <Route path="/login" element={
-        token ? (
-          <Navigate to="/dashboard" />
-        ) : (
           <LoginForm 
             email={email}
             setEmail={setEmail}
@@ -205,17 +224,25 @@ function App() {
             error={error}
             isLoggingIn={isLoggingIn}
             />
-        )
       }
     />
 
     {/* Registrierungsformular */}
     <Route path="/register" element={
       token ? (
-        <Navigate to="dashboard" />
+        <Navigate to="/dashboard" />
       ) : (
         <RegisterForm />
-      )
+        )
+      }
+    />
+    {/* Moodle Verbindung */}
+    <Route path="/connect-moodle" element={
+      token ? (
+        <ConnectMoodle accessToken={token} />
+      ) : (
+        <Navigate to="/login" />
+        )
       }
     />
 
