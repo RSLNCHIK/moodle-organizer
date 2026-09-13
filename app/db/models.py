@@ -1,10 +1,14 @@
-from sqlalchemy import Integer, String, ForeignKey
+from sqlalchemy import Integer, String, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
 
 class Course(Base):
     __tablename__ = "courses"
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "moodle_id", name="uq_courses_user_moodle"),
+    )
 
 
     # The Course class represents a course in the database. It inherits from the Base class, which is a declarative base provided by SQLAlchemy. The __tablename__ attribute specifies the name of the table in the database that corresponds to this model.
@@ -14,7 +18,7 @@ class Course(Base):
     # The moodle_id attribute is a unique integer that corresponds to the course ID in Moodle.
     # nullable=False means that this field cannot be left empty when creating a new course record in the database.
     # Mapped[int] indicates that this attribute is mapped to a column in the database table and is of type integer.
-    moodle_id: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)
+    moodle_id: Mapped[int] = mapped_column(Integer, nullable=False)
     fullname: Mapped[str] = mapped_column(String, nullable=False)
 
     assignments: Mapped[list["Assignment"]] = relationship(back_populates="course")
@@ -28,9 +32,18 @@ class Course(Base):
 class Assignment(Base):
     __tablename__ = "assignments"
 
+    # The __table_args__ attribute is used to define additional table-level arguments for the Assignment model.
+    # In this case, it specifies a unique constraint that ensures that the combination of course_id and moodle_id is unique across all assignments in the database.
+    # This means that for a given course, each assignment must have a unique Moodle ID, preventing duplicate assignments for the same course.
+
+    __table_args__ = (
+        UniqueConstraint("course_id", "moodle_id", name="uq_assignements_course_moodle"),
+    
+    )
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
-    moodle_id: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)
+    moodle_id: Mapped[int] = mapped_column(Integer, nullable=False)
 
     name: Mapped[str] = mapped_column(String, nullable=False)
 
