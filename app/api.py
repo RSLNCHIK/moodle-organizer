@@ -184,7 +184,7 @@ def sync_moodle(current_user: User = Depends(get_current_user)):
                 for moodle_file in attachments:
                     save_file(db, moodle_file, db_assignments)
 
-    db.commit() # Commit the changes to the database
+        db.commit() # Commit the changes to the database
 
     return {
         "message": "Sync erfolgreich",
