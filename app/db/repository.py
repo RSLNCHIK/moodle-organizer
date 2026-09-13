@@ -6,7 +6,7 @@ from .models import Course, Assignment, File, User, MoodleConnection
 
 def save_course(db: Session, moodle_course: dict, user_id: int) -> Course:
 
-    statement = select(Course).where(Course.moodle_id == moodle_course["id"])
+    statement = select(Course).where(Course.moodle_id == moodle_course["id"], Course.user_id == user_id)
                                     #  Course.user_id == user_id) # Filter by user_id to ensure the course is associated with the correct user
     
     # The statement variable is created using SQLAlchemy's select function to query the Course table for a course with a specific moodle_id that matches the id of the provided moodle_course dictionary. This allows us to check if a course with the same Moodle ID already exists in the database before attempting to save it.
@@ -29,7 +29,7 @@ def save_course(db: Session, moodle_course: dict, user_id: int) -> Course:
     return new_course
 
 def save_assignment(db: Session, moodle_assignment: dict, course: Course) -> Assignment:
-    statement = select(Assignment).where(Assignment.moodle_id == moodle_assignment["id"])
+    statement = select(Assignment).where(Assignment.moodle_id == moodle_assignment["id"], Assignment.course_id == course.id)
 
     existing_assignment = db.scalar(statement)
 
