@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 from fastapi.security import OAuth2PasswordRequestForm
 
-from services.token_crypto import encrypt_token
+from .services.token_crypto import encrypt_token, decrypt_token
 from .services.downloader import download_assignment_files
 from .services.auth_service import hash_password, verify_password, create_access_token, decode_access_token, get_current_user
 from .schemas import (SyncResponse, 
@@ -34,7 +34,8 @@ from .db.repository import (save_course,
                             get_course_by_id_and_user,
                             get_assignment_by_id_and_user,
                             get_files_by_assignment,
-                            save_moodle_connection
+                            save_moodle_connection,
+                            get_moodle_connection_by_user
                             )
 from .db.models import Course, Assignment, User
 
@@ -117,40 +118,55 @@ def course_assignments(course_id: int, current_user: User = Depends(get_current_
 
 @app.post("/sync", response_model=SyncResponse)
 def sync_moodle(current_user: User = Depends(get_current_user)):
-    site_info = get_site_info(url, TOKEN)
-
-    user_id = site_info["userid"]
-
-    moodle_courses = get_courses(url, TOKEN, user_id)
-
-    assignments_data = get_assignments(url, TOKEN, moodle_courses)
 
 
-    downloaded_courses = 0
-    processed_assignments = 0
-    files_downloaded = 0
-    files_skipped = 0
-    
-
-    # Save courses to the database
-    # The with statement is used to create a context manager for the database session. This ensures that the session is properly closed after the block of code is executed, even if an exception occurs. The SessionLocal() function is called to create a new database session, which is then used to save the courses retrieved from Moodle into the local database using the save_course function. After all courses have been processed, db.commit() is called to persist the changes to the database.
     with SessionLocal() as db:
+        connection = get_moodle_connection_by_user(db, current_user.id)
 
 
-        saved_courses: dict[int, Course] = {}
+        if connection is None:
+            raise HTTPException(status_code=400, detail="Keine Moodle-Verbindung gefunden.")
 
+        # moodle_url and moodle_token are extracted from the MoodleConnection object retrieved from the database.
+        # The moodle_url is the base URL of the Moodle site, and the moodle_token is the decrypted token used for authentification when making requests to the Moodle API.
+        moodle_url = connection.base_url
+
+        moodle_token = decrypt_token(connection.encrypted_token)
+
+
+        # The daten retrieved from Moodle is stored in the site_info, moodle_connection
+        site_info = get_site_info(moodle_url, moodle_token)
+
+
+        moodle_user_id = site_info["userid"]
+
+        moodle_courses = get_courses(moodle_url, moodle_token, moodle_user_id)
+
+        assignments_data = get_assignments(moodle_url, moodle_token, moodle_courses)
+
+
+        downloaded_courses = 0
+        processed_assignments = 0
+        files_downloaded = 0
+        files_skipped = 0
+
+        saved_courses = {}
+
+        # Courses are saved to the database
         for moodle_course in moodle_courses:
             db_course = save_course(db, moodle_course, current_user.id)
 
-            # The saved_courses dictionary is used to keep track of the courses that have been saved to the database. The key is the Moodle course ID, and the value is the corresponding Course object from the database. This allows us to easily reference the saved courses later when saving assignments, ensuring that each assignment is associated with the correct course in the database.
             saved_courses[moodle_course["id"]] = db_course
 
-        db.flush()  # Flush the session to generate IDs for new courses
 
+        db.flush() # Flush the session to generate IDs for new courses
+
+        # Assignments are saved to the database
         for moodle_course in assignments_data["courses"]:
+            # The moodle_course_id is the ID of the current Moodle course being processed. We use this ID to look up the corresponding Course object in the saved_courses dictionary, which contains all the courses that have been saved to the database.
+            # assignments_data["courses"] is a list of courses retrieved from Moodle, and each course contains a list of assignments. We iterate through each course and its assignments to save them to the database.
             moodle_course_id = moodle_course["id"]
 
-            # The moodle_course_id is the ID of the current Moodle course being processed. We use this ID to look up the corresponding Course object in the saved_courses dictionary, which contains all the courses that have been saved to the database.
             db_course = saved_courses[moodle_course_id]
 
             downloaded_courses += 1
@@ -161,25 +177,22 @@ def sync_moodle(current_user: User = Depends(get_current_user)):
 
                 db_assignments = save_assignment(db, assignment, db_course)
 
-                db.flush()  # Flush the session to generate IDs for new assignments
+                db.flush() # Flush the session to generate IDs for new assignments
 
                 attachments = assignment.get("introattachments", [])
-
 
                 for moodle_file in attachments:
                     save_file(db, moodle_file, db_assignments)
 
-        db.commit()  # Commit the changes to the database
-
+    db.commit() # Commit the changes to the database
 
     return {
-            "message": "Synchronisierung abgeschlossen!",
-            "downloaded_courses": downloaded_courses,
-            "assignments_processed": processed_assignments,
-            "files_downloaded": files_downloaded,
-            "files_already_existing": files_skipped
-    }
-
+        "message": "Sync erfolgreich",
+        "downloaded_courses": downloaded_courses,
+        "assignments_processed": processed_assignments,
+        "files_downloaded": files_downloaded,
+        "files_already_existing": files_skipped
+        }
 
 @app.post("/register", response_model=UserResponse, status_code=201)
 def register_user(user: UserCreate):
@@ -254,7 +267,7 @@ def connect_moodle(connection_data: MoodleConnectionCreate, current_user: User =
     if (
         not isinstance(site_info, dict) or 
         "userid" not in site_info):
-        raise HTTPException(status_code=400, detail="Moodle-URL ist unguelitig oder Token ist ungueltig.")    
+        raise HTTPException(status_code=400, detail="Moodle-URL ist ungueltig oder Token ist ungueltig.")    
 
     encrypted_token = encrypt_token(token)
 
@@ -268,4 +281,14 @@ def connect_moodle(connection_data: MoodleConnectionCreate, current_user: User =
         "message": "Moodle-Verbindung erfolgreich gespeichert.",
         "base_url": base_url
     }
+
+@app.get("/moodle-connection/status")
+def moodle_connection_status(current_user: User = Depends(get_current_user)):
+    with SessionLocal() as db:
+        connection = get_moodle_connection_by_user(db, current_user.id)
+
+        return {
+            "connected": connection is not None,
+            }
+
 
