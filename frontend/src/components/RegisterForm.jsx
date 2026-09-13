@@ -37,7 +37,7 @@ function RegisterForm() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    username: email,
+                    email: email,
                     password: password,
                     }),
                 }
@@ -90,11 +90,12 @@ function RegisterForm() {
                     </div>
                 </div>
 
+                {/* // type="button" is used to specify that the button schould not submit the form when clicked. This is important because the button is used for navigation, not for form submission. */}
                 <form 
-                onSubmit={handleSubmit}
+                onSubmit={handleRegister}
                 className="rounded-2xl bg-white p-7 shadow-xl shadow-gray-200/70">
                     <button
-                    type="submit"
+                    type="button"
                     onClick={() => navigate("/login")} 
                     className="mb-5 cursor-pointer text-sm font-medium text-gray-500 transition hover:text-gray-900">
                     ← Zurück zum Login
@@ -122,9 +123,24 @@ function RegisterForm() {
                     </div>
 
 
-                    <div className="mb-6">
+                    <div className="mb-4">
                         <label className="mb-2 block text-sm font-medium text-gray-800">
                             Passwort
+                        </label>
+
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(event) => setPassword(event.target.value)}
+                            placeholder="••••••••"
+                            className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        />
+                    </div>
+
+
+                    <div className="mb-6">
+                        <label className="mb-2 block text-sm font-medium text-gray-800">
+                            Passwort wiederholen
                         </label>
 
 
@@ -142,7 +158,7 @@ function RegisterForm() {
                         <p className="mb-4 text-sm text-red-500">{error}</p>
                     )}
 
-                    <button className="w-full cursor-pointer rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 diabled:cursor-not-allowed  disabled:opacity-60">
+                    <button type="submit" disabled={isRegistering} className="w-full cursor-pointer rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 diabled:cursor-not-allowed  disabled:opacity-60">
                         {isRegistering ? "Registrierung..." : "Konto erstellen"}
                     </button>
                 </form>
