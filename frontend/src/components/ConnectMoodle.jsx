@@ -123,6 +123,8 @@ function ConnectMoodle({ accessToken }) {
                         />
                     </div>
 
+                    // Display error messege if there is an error during the connection process
+
                     {error && (
                         <p className="mb-5 text-sm text-red-600">
                             {error}
