@@ -1,4 +1,4 @@
-function Navbar({ handleLogout }) {
+function Navbar({ handleLogout, handleSync, isSyncing }) {
 
     // Navbar component that displays the title and a logout button. The handleLogout function is passed as a prop from the parent component (App) and is called when the logout button is clicked.
     // mb-8: margin-bottom: 2rem (32px)
@@ -20,11 +20,18 @@ function Navbar({ handleLogout }) {
             // px-4 is used to add padding of 1rem (16px) to the left and right of the logout button.
             // py-2 is used to add padding of 0.5rem (8px) to the top and bottom of the logout button.
             // hover:bg-gray-50 is used to change the background color of the logout button to a very light gray when the user hovers over it. 50 is used to set the shade of gray. The higher the number, the darker the color. */}
-            <button
+            <div className="flex items-center gap-3">
+                <button onClick={handleSync} disabled={isSyncing} className="cursor-pointer rounded-xl bg-blue-600 px-5 py-3 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60">
+                    {isSyncing ? "Syncing..." : "Sync with Moodle"}
+                </button>
+
+                <button
                 onClick={handleLogout}
                 className="rounded-lg border border-gray-300 bg-white px-4 py-2 hover:bg-gray-50">
                 Logout
             </button>
+
+            </div>
         </div>
     );
 
