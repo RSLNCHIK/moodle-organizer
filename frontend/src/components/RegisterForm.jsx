@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 
 import InteractiveGridBackground from "./InteractiveGridBackground";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function RegisterForm() {
     const navigate = useNavigate();
 
@@ -30,7 +32,7 @@ function RegisterForm() {
         setIsRegistering(true);
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/register", 
+            const response = await fetch(`${API_URL}/register`, 
                 {
                 method: "POST",
                 headers: {
@@ -53,6 +55,7 @@ function RegisterForm() {
             navigate("/login");
 
         } catch (error) {
+            console.error("Fehler bei der Registrierung:", error);
             setError("Backend konnte nicht erreicht werden");
         } finally {
 
