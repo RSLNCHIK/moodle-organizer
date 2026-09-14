@@ -9,6 +9,9 @@ import RegisterForm from "./components/RegisterForm";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import ConnectMoodle from "./components/ConnectMoodle";
 
+
+const API_URL = import.meta.env.VITE_API_URL;
+
 function App() {
   // Die Ansicht vor der Anmeldung: Startseite oder Loginformular.
   const [email, setEmail] = useState("");
@@ -28,6 +31,10 @@ function App() {
   const [files, setFiles] = useState([]);
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState("");
 
   const navigate = useNavigate();
   
@@ -51,7 +58,7 @@ function App() {
       formData.append("password", password);
 
       const response = await fetch(
-      "http://127.0.0.1:8000/login",
+      `${API_URL}/login`,
       {
         method: "POST",
         headers: {
@@ -79,7 +86,7 @@ function App() {
       setToken(newToken);
 
       const connectionResponse = await fetch(
-        "http://127.0.0.1:8000/moodle-connection/status",
+        `${API_URL}/moodle-connection/status`,
         {
           headers: {
             Authorization: `Bearer ${newToken}`
@@ -99,7 +106,6 @@ function App() {
       // navigate("/connect-moodle");
 
 
-
     } catch {
       setError("Anmeldung konnte nicht abgeschlossen werden");
     } finally {
@@ -108,12 +114,12 @@ function App() {
     
   }
 
-  async function loadCourses(currentToken) {
+  async function loadCourses() {
     const response = await fetch(
-      "http://127.0.0.1:8000/courses",
+      `${API_URL}/courses`,
       {
         headers: {
-          Authorization: `Bearer ${currentToken}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -152,7 +158,7 @@ function App() {
     setSelectedAssignment(null);
     // setFiles is used to set the state variable files to an empty array. This is used to clear the files when a new course is selected.
     setFiles([]);
-    const response = await fetch(`http://127.0.0.1:8000/courses/${courseId}/assignments`, {
+    const response = await fetch(`${API_URL}/courses/${courseId}/assignments`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -175,7 +181,7 @@ function App() {
   // await is used to wait for the response from the backend API before continuing with the execution of the code. 
   // This is important because we need to wait for the data to be loaded before we can set the state variables files and selectedAssignment.
   async function loadFiles(assignmentId) {
-    const response = await fetch(`http://127.0.0.1:8000/assignments/${assignmentId}/files`, {
+    const response = await fetch(`${API_URL}/assignments/${assignmentId}/files`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`
@@ -199,10 +205,49 @@ function App() {
 
   }
 
+  async function handleSync() {
+    setIsSyncing(true);
+    setSyncMessage("");
+
+    try {
+      const response = await fetch(`${API_URL}/sync`, 
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        },
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        setSyncMessage(`Fehler beim Synchronisieren: ${data.detail}`);
+        return;
+      }
+
+      setSyncMessage("Synchronisierung erfolgreich abgeschlossen");
+
+
+    // await is used to wait for the response from the backend API before continuing with the execution of the code.
+      await loadCourses();
+
+    } catch (error) {
+      console.error("Fehler beim Synchronisieren:", error);
+
+      
+      setSyncMessage("Fehler beim Synchronisieren");
+
+    } finally {
+      setIsSyncing(false);
+    }
+
+  }
+
+
   // UseEffect is a React hook that allows to perform side effects in function components. In this case, it is used to load the courses when the token changes.
   useEffect(() => {
     if (token) {
-      loadCourses(token);
+      loadCourses();
     }
   }, [token]);
 
@@ -237,6 +282,7 @@ function App() {
       }
     />
     {/* Moodle Verbindung */}
+    {/* ConnectMoodle component is rendered when the user navigates to the /connect-moodle route. It receives the accessToken prop, which is used to authenticate the request to the backend API. */}
     <Route path="/connect-moodle" element={
       token ? (
         <ConnectMoodle accessToken={token} />
@@ -252,7 +298,13 @@ function App() {
       token ? (
         <div className="min-h-screen bg-gray-100">
           <div className="mx-auto max-w-7xl p-8">
-            <Navbar handleLogout={handleLogout} />
+            <Navbar handleLogout={handleLogout} handleSync={handleSync} isSyncing={isSyncing} />
+
+            {syncMessage && (
+              <p className="mb-5 text-sm text-gray-600">
+                {syncMessage}
+              </p>
+            )}
 
             <div className="grid gap-6 lg:grid-cols-3">
 
