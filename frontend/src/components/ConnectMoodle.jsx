@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import InteractiveGridBackground from "./InteractiveGridBackground";
 
+const API_URL = import.meta.env.VITE_API_URL;
 
 function ConnectMoodle({ accessToken }) {
     const navigate = useNavigate();
@@ -25,7 +26,7 @@ function ConnectMoodle({ accessToken }) {
         setIsConnecting(true);
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/moodle-connection",
+            const response = await fetch(`${API_URL}/moodle-connection`,
                 {
                     method: "POST",
                     headers: {
@@ -47,6 +48,30 @@ function ConnectMoodle({ accessToken }) {
             if (!response.ok) {
                 setError(data.detail || "Verbindung zu Moodle fehlgeschlagen");
                 return;
+            }
+
+
+            // Moodle connection was successful, navigate to the dashboard
+
+            const syncResponse = await fetch(
+                `${API_URL}/sync`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${accessToken}`,
+                    }
+                }
+            )
+
+            const syncData = await syncResponse.json();
+
+            if (!syncResponse.ok) {
+
+                console.error("Fehler beim Synchronisieren:", syncData);
+
+                setError(syncData.detail || "Moodle wurde verbunden, aber die Synchronisierung ist fehlgeschlagen.");
+                return;
+
             }
 
             // Navigate to the dashboard after successfull connection
