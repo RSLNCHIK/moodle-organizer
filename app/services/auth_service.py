@@ -1,3 +1,6 @@
+import os
+from dotenv import load_dotenv
+
 from datetime import datetime, timedelta, timezone
 from pwdlib import PasswordHash
 
@@ -9,10 +12,18 @@ from fastapi.security import OAuth2PasswordBearer
 from app.db.database import SessionLocal
 from app.db.repository import get_user_by_id
 
+load_dotenv()
+
 
 password_hash = PasswordHash.recommended()
 
-SECRET_KEY = "spaeter-aus-env-laden"
+# The SECRET_KEY is a secret key used for signing and verifying JSON Web Tokens (JWTs).
+# os.environ[] is used to access environment variables, and in this case, it retrieves the value of the "JWT_SECRET_KEY" environment variable. This key should be kept secret and not exposed in the code or version control, as it is used to ensure the integrity and authenticity of the JWTs.
+SECRET_KEY = os.environ["JWT_SECRET_KEY"]
+
+if SECRET_KEY is None:
+    raise RuntimeError("JWT_SECRET_KEY is not set in the environment variables.")
+
 
 ALGORITHM = "HS256"
 
