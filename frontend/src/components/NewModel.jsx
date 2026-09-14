@@ -42,7 +42,7 @@ function NewModel() {
                 border-s is used to set the border style of the element to a solid line on the left side. */}
                 <div className="flex justify-center">
                     <a className="pointer-events-auto inline-flex items-center gap-x-2 bg-layer border border-layer-line text-xs text-layer-foreground p-2 px-3 rounded-full transition hover:border-line-3 focus:outline-hidden focus:border-line-3" href="#">
-                        Explore the Capital Product
+                        Explore the Moodle Organizer Project
                         <span className="flex items-center gap-x-1">
                             <span className="border-s border-line-2 text-primary ps-2">Explore</span>
                             <svg className="shrink-0 size-4 text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
@@ -60,13 +60,13 @@ function NewModel() {
                 <!-- Title --> */}
                 <div className="mt-8 max-w-4xl text-center mx-auto">
                     <h1 className="m-0 font-bold text-slate-800 text-4xl md:text-5xl lg:text-7xl leading-tight">
-                        Supercharged Preline Experience
+                        Supercharged Moodle Organizer Experience
                     </h1>
                 </div>
                 {/* <!-- End Title --> */}
 
                 <div className="mt-5 max-w-3xl text-center mx-auto">
-                    <p className="text-lg text-muted-foreground-2">Preline is a large open-source project, crafted with Tailwind CSS framework by Hmlstream.</p>
+                    <p className="text-lg text-muted-foreground-2">You can now easily organize your Moodle assignments and files in one place.</p>
                 </div>
 
                 {/* <!-- Buttons --> */}
