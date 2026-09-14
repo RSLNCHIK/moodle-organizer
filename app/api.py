@@ -54,15 +54,18 @@ TOKEN = os.getenv("MOODLE_TOKEN")
 url = f"{MOODLE_URL}/webservice/rest/server.php"
 
 
+FRONTEND_URL = os.environ["FRONTEND_URL"]  # Load the frontend URL from environment variables
+
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"], # Allow all origins for development purposes. In production, specify allowed origins.
+    allow_origins=[FRONTEND_URL], # Allow all origins for development purposes. In production, specify allowed origins.
     allow_credentials=True,
     allow_methods=["*"], # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"], # Allow all headers
     )
+
 
 # This is the main endpoint for Moodle's web service API
 # Through this endpoint (URL) we can make requests to various Moodle functionss
