@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: moodle-postgres
+
+    environment:
+      POSTGRES_DB: moodle_organizer
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+
+  backend:
+    build: .
+    container_name: moodle-backend
+
+    ports:
+      - "8000:8000"
+
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/moodle_organizer
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      MOODLE_TOKEN_KEY: ${MOODLE_TOKEN_KEY}
+      FRONTEND_URL: http://localhost:5173
+
+    depends_on:
+      - postgres
+    
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000
+
+    container_name:
+      moodle-frontend
+
+    ports:
+      - "5173:5173"
+    
+    depends_on:
+      - backend
+
+
+volumes:
+  postgres_data:
