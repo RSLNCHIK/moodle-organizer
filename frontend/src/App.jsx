@@ -10,7 +10,8 @@ import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import ConnectMoodle from "./components/ConnectMoodle";
 
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+const API_URL = import.meta.env.VITE_API_URL.replace(/\/+$/, ""); // Remove trailing slash if present
 
 function App() {
   // Die Ansicht vor der Anmeldung: Startseite oder Loginformular.
