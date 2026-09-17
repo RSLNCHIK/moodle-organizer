@@ -20,5 +20,7 @@ COPY . .
 # CMD specifies the command to run when the container starts. 
 # In this case, it runs the uvicorn server to serve the FastAPI application defined in app/api.py.
 # The --host option is set to "0.0.0.0" and the --port option is set to "8000" to make the application accessible from outside the container.
-CMD ["uvicorn", "app.api:app", "--host", "0.0.0.0", "--port", "8000"]
+# CMD ["uvicorn", "app.api:app", "--host", "0.0.0.0", "--port", "8000"]
 
+# sh -c is used to run a shell command that first runs the alembic upgrade head command to apply any pending database migrations, and then starts the uvicorn server to serve the FastAPI application.
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.api:app --host 0.0.0.0 --port ${PORT:-8000}"]
