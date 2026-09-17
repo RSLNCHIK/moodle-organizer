@@ -38,6 +38,7 @@ class AssignmentResponse(BaseModel):
 class UserCreate(BaseModel):
     email: str
     password: str
+    invite_code: str
 
 class UserResponse(BaseModel):
 
