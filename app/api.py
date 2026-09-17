@@ -1,4 +1,5 @@
 import os
+import secrets
 from fastapi import FastAPI, HTTPException, Depends
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -50,6 +51,7 @@ load_dotenv()
 
 MOODLE_URL = os.getenv("MOODLE_URL")
 TOKEN = os.getenv("MOODLE_TOKEN")
+REGISTRATION_INVITE_CODE = os.environ["REGISTRATION_INVITE_CODE"]
 
 url = f"{MOODLE_URL}/webservice/rest/server.php"
 
@@ -198,16 +200,19 @@ def sync_moodle(current_user: User = Depends(get_current_user)):
         }
 
 @app.post("/register", response_model=UserResponse, status_code=201)
-def register_user(user: UserCreate):
+def register_user(user_data: UserCreate):
+    if not secrets.compare_digest(user_data.invite_code, REGISTRATION_INVITE_CODE):
+        raise HTTPException(status_code=403, detail="Invalid invite code. Registration is not allowed.")
+
     with SessionLocal() as db:
-        existing_user = get_user_by_email(db, user.email)
+        existing_user = get_user_by_email(db, user_data.email)
 
         if existing_user:
             raise HTTPException(status_code=409, detail="Benutzer mit dieser E-Mail existiert bereits.")
 
-        hashed_password = hash_password(user.password)
+        hashed_password = hash_password(user_data.password)
 
-        new_user = create_user(db, user.email, hashed_password)
+        new_user = create_user(db, user_data.email, hashed_password)
 
         db.commit()  # Commit the transaction to save the new user to the database
         db.refresh(new_user)  # Refresh the new_user instance to get the updated data from the database
