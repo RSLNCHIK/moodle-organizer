@@ -13,6 +13,7 @@ function RegisterForm() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [passwordRepeat, setPasswordRepeat] = useState("");
+    const [inviteCode, setInviteCode] = useState("");
 
     const [error, setError] = useState("");
     const [isRegistering, setIsRegistering] = useState(false);
@@ -41,6 +42,7 @@ function RegisterForm() {
                 body: JSON.stringify({
                     email: email,
                     password: password,
+                    invite_code: inviteCode,
                     }),
                 }
             );
@@ -95,8 +97,8 @@ function RegisterForm() {
 
                 {/* // type="button" is used to specify that the button schould not submit the form when clicked. This is important because the button is used for navigation, not for form submission. */}
                 <form 
-                onSubmit={handleRegister}
-                className="rounded-2xl bg-white p-7 shadow-xl shadow-gray-200/70">
+                    onSubmit={handleRegister}
+                    className="rounded-2xl bg-white p-7 shadow-xl shadow-gray-200/70">
                     <button
                     type="button"
                     onClick={() => navigate("/login")} 
@@ -123,6 +125,20 @@ function RegisterForm() {
                             onChange={(event) => setEmail(event.target.value)}
                             placeholder="E-Mail"
                             className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 fokus:ring-blue-100"/>
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="mb-2 block text-sm font-medium text-gray-800">
+                            Einladungscode
+                        </label>
+                        <input
+                                type="password"
+                                placeholder="Einladungscode"
+                                value={inviteCode}
+                                onChange={(event) => setInviteCode(event.target.value)}
+                                required
+                                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            />
                     </div>
 
 
@@ -168,7 +184,6 @@ function RegisterForm() {
             </div>
         </div>
     )
-
 }
 
 export default RegisterForm;
