@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import InteractiveGridBackground from "./InteractiveGridBackground";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL.replace(/\/+$/, ""); // Remove trailing slash if present
 
 function RegisterForm() {
     const navigate = useNavigate();
