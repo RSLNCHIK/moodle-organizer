@@ -4,15 +4,21 @@ services:
     container_name: moodle-postgres
 
     environment:
-      POSTGRES_DB: moodle_organizer
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
     ports:
       - "5433:5432"
 
     volumes:
       - postgres_data:/var/lib/postgresql
+    
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 
   backend:
@@ -23,13 +29,16 @@ services:
       - "8000:8000"
 
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/moodle_organizer
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       MOODLE_TOKEN_KEY: ${MOODLE_TOKEN_KEY}
-      FRONTEND_URL: http://localhost:5173
+      FRONTEND_URL: ${FRONTEND_URL}
+      REGISTRATION_INVITE_CODE: ${REGISTRATION_INVITE_CODE}
+
 
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     
   frontend:
     build:
