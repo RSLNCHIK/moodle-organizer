@@ -201,7 +201,10 @@ def sync_moodle(current_user: User = Depends(get_current_user)):
 
 @app.post("/register", response_model=UserResponse, status_code=201)
 def register_user(user_data: UserCreate):
-    if not secrets.compare_digest(user_data.invite_code, REGISTRATION_INVITE_CODE):
+    if not secrets.compare_digest(
+        user_data.invite_code.encode("utf-8"),
+        REGISTRATION_INVITE_CODE.encode("utf-8"),
+    ):
         raise HTTPException(status_code=403, detail="Invalid invite code. Registration is not allowed.")
 
     with SessionLocal() as db:
