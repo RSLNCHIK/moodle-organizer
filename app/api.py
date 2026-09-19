@@ -40,10 +40,11 @@ from .db.repository import (save_course,
                             )
 from .db.models import Course, Assignment, User
 
-from .clients.moodle_client import (
+from app.clients.moodle_client import (
     get_site_info,
     get_courses,
-    get_assignments
+    get_assignments,
+    MoodleAPIError
 )
 # Load environment variables from .env file
 
@@ -267,7 +268,7 @@ def connect_moodle(connection_data: MoodleConnectionCreate, current_user: User =
     try:
         site_info = get_site_info(base_url, token)
 
-    except Exception as e:
+    except MoodleAPIError as e:
         raise HTTPException(status_code=400, detail="Moodle konnte nicht erreicht werden.")
 
     # The site_info variable is expected to be a dictionary containing information about the Moodle site
