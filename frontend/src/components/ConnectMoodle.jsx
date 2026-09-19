@@ -101,10 +101,13 @@ function ConnectMoodle({ accessToken }) {
 
                     <div className="mb-5">
                         <label className="mb-2 block text-sm font-semibold">
-                            Moodle-URL
+                            Moodle-Adresse
                         </label>
 
-                        <input type="text" value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} placeholder="Moodle Webservice Token" className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500" />
+                        <input type="url" value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} placeholder="https://moodle.example.de" className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500" />
+                        <p>
+                            Gib die normale Adresse deiner Moodle-Instanz ein, z.B. <code>https://moodle.example.de</code>. Die Webservice-URL wird automatisch ergänzt.
+                        </p>
 
                     </div>
 
